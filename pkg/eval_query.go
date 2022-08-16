@@ -132,6 +132,7 @@ func (q *EvalQuery) replace(query string) (string, error) {
 		timeFilterMs = q.getDateFilter() + " AND " + timeFilterMs
 	}
 
+	// TODO: table 要用 `` 包裹起来
 	table := q.escapeIdentifier(q.Table)
 	if q.Database != "" {
 		table = q.escapeIdentifier(q.Database) + "." + table

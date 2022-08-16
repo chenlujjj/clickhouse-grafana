@@ -1260,6 +1260,8 @@ func TestUnescapeMacros(t *testing.T) {
 func TestEscapeIdentifier(t *testing.T) {
 	q := EvalQuery{}
 	r := require.New(t)
+	r.Equal("live.live.push-live_all", q.escapeIdentifier("live.live.push-live_all"), "dash in table name")
+
 	r.Equal("My_Identifier_33", q.escapeIdentifier("My_Identifier_33"), "Standard identifier - untouched")
 	r.Equal("\"1nfoVista\"", q.escapeIdentifier("1nfoVista"), "Begining with number")
 	r.Equal("\"My Identifier\"", q.escapeIdentifier("My Identifier"), "Containing spaces")
