@@ -434,7 +434,8 @@ class SqlQueryCtrl extends QueryCtrl {
                     'SELECT name text, type value ' +
                     'FROM system.columns ' +
                     'WHERE database = \'' + this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\' AND NOT startsWith(value, \'MapV2\')';
+                    'table = \'' + this.target.table + '\' AND NOT startsWith(value, \'MapV2\') ' +
+                    'ORDER BY text';
                 break;
         }
         return query;
