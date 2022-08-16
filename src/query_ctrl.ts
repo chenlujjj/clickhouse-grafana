@@ -380,9 +380,11 @@ class SqlQueryCtrl extends QueryCtrl {
         let query;
         switch (type) {
             case 'TABLES':
+                // 排除 _all/_dist/_buffer 后缀表，提高筛选速度
                 query = 'SELECT name ' +
                     'FROM system.tables ' +
                     'WHERE database = \'' + this.target.database + '\' ' +
+                    'AND NOT endsWith(name, \'_all\') AND NOT endsWith(name, \'_dist\') AND NOT endsWith(name, \'_buffer\') '
                     'ORDER BY name';
                 break;
             case 'DATE':
@@ -424,10 +426,15 @@ class SqlQueryCtrl extends QueryCtrl {
                     'ORDER BY name';
                 break;
             case 'COLUMNS':
-                query = 'SELECT name text, type value ' +
+                // 用于列名补全
+                query = 'SELECT arrayElement(splitByString(\'_map_ICDS_\', keys), -1) as text, multiIf(arrayElement(splitByString(\'_map_ICDS_\', keys), 1) == \'string\', \'String\', arrayElement(splitByString(\'_map_ICDS_\', keys), 1) == \'number\', \'Float64\', \'UInt8\') as value from (SELECT arrayJoin(implicit_columns) as keys FROM system.parts_all WHERE database = \'' +
+                    this.target.database + '\' AND ' +
+                    'table = \'' + this.target.table + '\' AND min_time > now() - INTERVAL 1 DAY GROUP BY keys)' + 
+                    ' UNION ALL ' +
+                    'SELECT name text, type value ' +
                     'FROM system.columns ' +
                     'WHERE database = \'' + this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\'';
+                    'table = \'' + this.target.table + '\' AND NOT startsWith(value, \'MapV2\')';
                 break;
         }
         return query;
