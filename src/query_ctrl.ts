@@ -380,18 +380,19 @@ class SqlQueryCtrl extends QueryCtrl {
         let query;
         switch (type) {
             case 'TABLES':
-                // 排除 _all/_dist/_buffer 后缀表，提高筛选速度
+                // 排除 _all/_dist/_buffer 后缀表，提高筛选速度 (x)
+                // 先只选出 _all 的表
                 query = 'SELECT name ' +
                     'FROM system.tables ' +
-                    'WHERE database = \'' + this.target.database + '\' ' +
-                    'AND NOT endsWith(name, \'_all\') AND NOT endsWith(name, \'_dist\') AND NOT endsWith(name, \'_buffer\') '
+                    'WHERE `database` = \'' + this.target.database + '\' ' +
+                    'AND endsWith(name, \'_all\') '
                     'ORDER BY name';
                 break;
             case 'DATE':
                 query = 'SELECT name ' +
                     'FROM system.columns ' +
-                    'WHERE database = \'' + this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\' AND ' +
+                    'WHERE `database` = \'' + this.target.database + '\' AND ' +
+                    '`table` = \'' + this.target.table + '\' AND ' +
                     'match(type,\'^Date$|^Date\\([^)]+\\)$\') ' +
                     'ORDER BY name ' +
                     'UNION ALL SELECT \' \' AS name';
@@ -399,24 +400,24 @@ class SqlQueryCtrl extends QueryCtrl {
             case 'DATETIME':
                 query = 'SELECT name ' +
                     'FROM system.columns ' +
-                    'WHERE database = \'' + this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\' AND ' +
+                    'WHERE `database` = \'' + this.target.database + '\' AND ' +
+                    '`table` = \'' + this.target.table + '\' AND ' +
                     'match(type,\'^DateTime$|^DateTime\\([^)]+\\)$\') ' +
                     'ORDER BY name';
                 break;
             case 'DATETIME64':
                 query = 'SELECT name ' +
                     'FROM system.columns ' +
-                    'WHERE database = \'' + this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\' AND ' +
+                    'WHERE `database` = \'' + this.target.database + '\' AND ' +
+                    '`table` = \'' + this.target.table + '\' AND ' +
                     'type LIKE \'DateTime64%\' ' +
                     'ORDER BY name';
                 break;
             case 'TIMESTAMP':
                 query = 'SELECT name ' +
                     'FROM system.columns ' +
-                    'WHERE database = \'' + this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\' AND ' +
+                    'WHERE `database` = \'' + this.target.database + '\' AND ' +
+                    '`table` = \'' + this.target.table + '\' AND ' +
                     'type = \'UInt32\' ' +
                     'ORDER BY name';
                 break;
@@ -427,14 +428,14 @@ class SqlQueryCtrl extends QueryCtrl {
                 break;
             case 'COLUMNS':
                 // 用于列名补全
-                query = 'SELECT arrayElement(splitByString(\'_map_ICDS_\', keys), -1) as text, multiIf(arrayElement(splitByString(\'_map_ICDS_\', keys), 1) == \'string\', \'String\', arrayElement(splitByString(\'_map_ICDS_\', keys), 1) == \'number\', \'Float64\', \'UInt8\') as value from (SELECT arrayJoin(implicit_columns) as keys FROM system.parts_all WHERE database = \'' +
+                query = 'SELECT arrayElement(splitByString(\'_map_ICDS_\', keys), -1) as text, multiIf(arrayElement(splitByString(\'_map_ICDS_\', keys), 1) == \'string\', \'String\', arrayElement(splitByString(\'_map_ICDS_\', keys), 1) == \'number\', \'Float64\', \'UInt8\') as value from (SELECT arrayJoin(implicit_columns) as keys FROM system.parts_all WHERE `database` = \'' +
                     this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\' AND min_time > now() - INTERVAL 1 DAY GROUP BY keys)' + 
+                    '`table` = \'' + this.target.table + '\' AND min_time > now() - INTERVAL 1 DAY GROUP BY keys)' + 
                     ' UNION ALL ' +
                     'SELECT name text, type value ' +
                     'FROM system.columns ' +
-                    'WHERE database = \'' + this.target.database + '\' AND ' +
-                    'table = \'' + this.target.table + '\' AND NOT startsWith(value, \'MapV2\') ' +
+                    'WHERE `database` = \'' + this.target.database + '\' AND ' +
+                    '`table` = \'' + this.target.table + '\' AND NOT startsWith(value, \'MapV2\') ' +
                     'ORDER BY text';
                 break;
         }
