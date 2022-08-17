@@ -25,7 +25,7 @@ async function runChMode() {
 
 runChMode().catch(console.error);
 
-const defaultQuery = "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t";
+const defaultQuery = "SELECT $timeSeries as t, count(1) FROM $table WHERE $timeFilter GROUP BY t ORDER BY t";
 
 class SqlQueryCtrl extends QueryCtrl {
     static templateUrl = 'partials/query.editor.html';
