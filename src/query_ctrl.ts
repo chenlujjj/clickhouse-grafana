@@ -380,12 +380,11 @@ class SqlQueryCtrl extends QueryCtrl {
         let query;
         switch (type) {
             case 'TABLES':
-                // 排除 _all/_dist/_buffer 后缀表，提高筛选速度 (x)
-                // 先只选出 _all 的表
+                // 排除 _all/_dist/_buffer 后缀表，提高筛选速度，并且避免干扰用户
                 query = 'SELECT name ' +
                     'FROM system.tables ' +
                     'WHERE `database` = \'' + this.target.database + '\' ' +
-                    'AND endsWith(name, \'_all\') '
+                    'AND NOT endsWith(name, \'_all\') AND NOT endsWith(name, \'_dist\') AND NOT endsWith(name, \'_buffer\') '
                     'ORDER BY name';
                 break;
             case 'DATE':
