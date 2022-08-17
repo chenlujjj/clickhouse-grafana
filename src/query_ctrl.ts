@@ -422,7 +422,7 @@ class SqlQueryCtrl extends QueryCtrl {
                 break;
             case 'DATABASES':
                 query = 'SELECT name ' +
-                    'FROM system.databases ' +
+                    'FROM system.databases WHERE name = \'billions\' ' +
                     'ORDER BY name';
                 break;
             case 'COLUMNS':
