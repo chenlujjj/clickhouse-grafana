@@ -39,6 +39,8 @@ func (ds *ClickHouseDatasource) getClient(ctx backend.PluginContext) (*ClickHous
 }
 
 func (ds *ClickHouseDatasource) executeQuery(pluginContext backend.PluginContext, ctx context.Context, query *Query) backend.DataResponse {
+	backend.Logger.Info("fuck: enter ClickHouseDatasource executeQuery")
+
 	onErr := func(err error) backend.DataResponse {
 		backend.Logger.Error(fmt.Sprintf("Datasource executeQuery error: %s", err))
 		return backend.DataResponse{Error: err}
@@ -66,6 +68,8 @@ func (ds *ClickHouseDatasource) executeQuery(pluginContext backend.PluginContext
 }
 
 func (ds *ClickHouseDatasource) evalQuery(pluginContext backend.PluginContext, ctx context.Context, evalQuery *EvalQuery) backend.DataResponse {
+	backend.Logger.Info("fuck: enter ClickHouseDatasource evalQuery")
+
 	onErr := func(err error) backend.DataResponse {
 		backend.Logger.Error(fmt.Sprintf("Datasource evalQuery error: %s", err))
 		return backend.DataResponse{Error: err}
