@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
 export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
 export GRAFANA_PLUGIN_TYPE=$(cat dist/plugin.json | jq -r .type)

@@ -1210,7 +1210,7 @@ func TestEvalQueryTimeSeriesTimeFilterAndDateTime64(t *testing.T) {
 		"GROUP BY t\n" +
 		"ORDER BY t"
 	const expQuery = "SELECT (intDiv(toFloat64(\"d\") * 1000, (15 * 1000)) * (15 * 1000)) as t, sum(x) AS metric\n" +
-		"FROM default.test_datetime64\n" +
+		"FROM default.`test_datetime64`\n" +
 		"WHERE \"d\" >= toDateTime64(1545613320, 3) AND \"d\" <= toDateTime64(1546300740, 3)\n" +
 		"GROUP BY t\n" +
 		"ORDER BY t"
@@ -1280,7 +1280,7 @@ func TestEvalQueryColumnsMacrosAndArrayJoin(t *testing.T) {
 		"FROM $table\n" +
 		"ARRAY JOIN Metrics"
 	// new lines was removed, because we don't use adhoc filters
-	const expQuery = "SELECT t, groupArray((JobSource, Kafka_lag_max)) AS groupArr FROM ( SELECT (intDiv(toUInt32(dateTimeColumn), 15) * 15) * 1000 AS t, substring(concat(JobName as JobName, ' # ', Metrics.Name as MetricName), 1, 50) as JobSource, sum(Metrics.Value) as Kafka_lag_max FROM default.test_array_join_nested\n" +
+	const expQuery = "SELECT t, groupArray((JobSource, Kafka_lag_max)) AS groupArr FROM ( SELECT (intDiv(toUInt32(dateTimeColumn), 15) * 15) * 1000 AS t, substring(concat(JobName as JobName, ' # ', Metrics.Name as MetricName), 1, 50) as JobSource, sum(Metrics.Value) as Kafka_lag_max FROM default.`test_array_join_nested`\n" +
 		"ARRAY JOIN Metrics " +
 		"WHERE dateTimeColumn >= toDate(1545613320) AND dateTimeColumn <= toDate(1546300740) AND dateTimeColumn >= toDateTime(1545613320) AND dateTimeColumn <= toDateTime(1546300740) GROUP BY t, JobSource ORDER BY t, JobSource) GROUP BY t ORDER BY t"
 	r := require.New(t)
@@ -1311,7 +1311,7 @@ func TestEvalQueryColumnsMacrosAndArrayJoin(t *testing.T) {
 func TestEvalQueryTimeFilterByColumnAndDateTimeCol(t *testing.T) {
 	const description = "combine $timeFilterByColumn and $dateTimeCol"
 	const query = "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter AND $timeFilterByColumn($dateTimeCol) AND $timeFilterByColumn(another_column) GROUP BY t"
-	const expQuery = "SELECT (intDiv(toUInt32(tm), 15) * 15) * 1000 as t, count() FROM default.test_table " +
+	const expQuery = "SELECT (intDiv(toUInt32(tm), 15) * 15) * 1000 as t, count() FROM default.`test_table` " +
 		"WHERE dt >= toDate(1545613320) AND dt <= toDate(1546300740) AND tm >= toDateTime(1545613320) AND tm <= toDateTime(1546300740) " +
 		"AND tm >= toDateTime(1545613201) AND tm <= toDateTime(1546300859) " +
 		"AND another_column >= toDateTime(1545613201) AND another_column <= toDateTime(1546300859) " +
@@ -1346,7 +1346,7 @@ func TestEvalQueryNaturalTimeSeries(t *testing.T) {
 	const description = "check $naturalTimeSeries"
 	const query = "SELECT $naturalTimeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t"
 	const expQuery = "SELECT toUInt32(toDateTime(toStartOfMonth(tm))) * 1000 as t, count() " +
-		"FROM default.test_table WHERE dt >= toDate(1545613320) AND dt <= toDate(1640995140) " +
+		"FROM default.`test_table` WHERE dt >= toDate(1545613320) AND dt <= toDate(1640995140) " +
 		"AND tm >= toDateTime(1545613320) AND tm <= toDateTime(1640995140) GROUP BY t"
 
 	r := require.New(t)
@@ -1383,7 +1383,7 @@ func TestEvalQueryTimeSeriesMsTimeFilterMsAndDateTime64(t *testing.T) {
 		"GROUP BY t\n" +
 		"ORDER BY t"
 	const expQuery = "SELECT (intDiv(toFloat64(\"d\") * 1000, 100) * 100) as t, sum(x) AS metric\n" +
-		"FROM default.test_datetime64\n" +
+		"FROM default.`test_datetime64`\n" +
 		"WHERE \"d\" >= toDateTime64(1545613323200/1000, 3) AND \"d\" <= toDateTime64(1546300799200/1000, 3)\n" +
 		"GROUP BY t\n" +
 		"ORDER BY t"
