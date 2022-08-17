@@ -1259,6 +1259,11 @@ func TestUnescapeMacros(t *testing.T) {
 func TestEscapeIdentifier(t *testing.T) {
 	q := EvalQuery{}
 	r := require.New(t)
+
+	// TODO: why ?
+	r.Equal("\"a.b.c\"", q.escapeIdentifier("a.b.c"), "")
+	r.Equal("a.b.c-d", q.escapeIdentifier("a.b.c-d"), "")
+
 	r.Equal("My_Identifier_33", q.escapeIdentifier("My_Identifier_33"), "Standard identifier - untouched")
 	r.Equal("\"1nfoVista\"", q.escapeIdentifier("1nfoVista"), "Begining with number")
 	r.Equal("\"My Identifier\"", q.escapeIdentifier("My Identifier"), "Containing spaces")
