@@ -25,6 +25,7 @@ type ClickHouseClient struct {
 }
 
 func (client *ClickHouseClient) Query(ctx context.Context, query string) (*Response, error) {
+	backend.Logger.Info("fuck: ClickHouseClient Query: %s", query)
 
 	onErr := func(err error) (*Response, error) {
 		backend.Logger.Error(fmt.Sprintf("clickhouse client query error: %v", err))
@@ -103,7 +104,7 @@ func (client *ClickHouseClient) Query(ctx context.Context, query string) (*Respo
 		return onErr(errors.New(string(body)))
 	}
 
-	var jsonResp = &Response{ctx: ctx}
+	jsonResp := &Response{ctx: ctx}
 	err = json.Unmarshal(body, jsonResp)
 	if err != nil {
 		return onErr(fmt.Errorf("unable to parse json %s. Error: %w", body, err))

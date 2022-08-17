@@ -141,6 +141,8 @@ func (ds *ClickHouseDatasource) CheckHealth(
 	ctx context.Context,
 	req *backend.CheckHealthRequest,
 ) (*backend.CheckHealthResult, error) {
+	backend.Logger.Info("fuck: ClickHouseDatasource CheckHealth")
+
 	onErr := func(err error) (*backend.CheckHealthResult, error) {
 		backend.Logger.Error(fmt.Sprintf("HealthCheck error: %v", err))
 		return &backend.CheckHealthResult{
