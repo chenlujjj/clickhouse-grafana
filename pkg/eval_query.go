@@ -2,32 +2,37 @@ package main
 
 import (
 	"fmt"
-	"github.com/dlclark/regexp2"
 	"math"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/dlclark/regexp2"
 )
 
 /* var NumberOnlyRegexp = regexp.MustCompile(`^[+-]?\d+(\.\d+)?$`) */
 
-var timeSeriesMacroRegexp = regexp.MustCompile(`\$timeSeries\b`)
-var timeSeriesMsMacroRegexp = regexp.MustCompile(`\$timeSeriesMs\b`)
-var naturalTimeSeriesMacroRegexp = regexp.MustCompile(`\$naturalTimeSeries\b`)
-var timeFilterMacroRegexp = regexp.MustCompile(`\$timeFilter\b`)
-var timeFilterMsMacroRegexp = regexp.MustCompile(`\$timeFilterMs\b`)
-var tableMacroRegexp = regexp.MustCompile(`\$table\b`)
-var fromMacroRegexp = regexp.MustCompile(`\$from\b`)
-var toMacroRegexp = regexp.MustCompile(`\$to\b`)
-var dateColMacroRegexp = regexp.MustCompile(`\$dateCol\b`)
-var dateTimeColMacroRegexp = regexp.MustCompile(`\$dateTimeCol\b`)
-var intervalMacroRegexp = regexp.MustCompile(`\$interval\b`)
-var timeFilterByColumnMacroRegexp = regexp.MustCompile(`\$timeFilterByColumn\(([\w_]+)\)`)
-var timeFilter64ByColumnMacroRegexp = regexp.MustCompile(`\$timeFilter64ByColumn\(([\w_]+)\)`)
+var (
+	timeSeriesMacroRegexp           = regexp.MustCompile(`\$timeSeries\b`)
+	timeSeriesMsMacroRegexp         = regexp.MustCompile(`\$timeSeriesMs\b`)
+	naturalTimeSeriesMacroRegexp    = regexp.MustCompile(`\$naturalTimeSeries\b`)
+	timeFilterMacroRegexp           = regexp.MustCompile(`\$timeFilter\b`)
+	timeFilterMsMacroRegexp         = regexp.MustCompile(`\$timeFilterMs\b`)
+	tableMacroRegexp                = regexp.MustCompile(`\$table\b`)
+	fromMacroRegexp                 = regexp.MustCompile(`\$from\b`)
+	toMacroRegexp                   = regexp.MustCompile(`\$to\b`)
+	dateColMacroRegexp              = regexp.MustCompile(`\$dateCol\b`)
+	dateTimeColMacroRegexp          = regexp.MustCompile(`\$dateTimeCol\b`)
+	intervalMacroRegexp             = regexp.MustCompile(`\$interval\b`)
+	timeFilterByColumnMacroRegexp   = regexp.MustCompile(`\$timeFilterByColumn\(([\w_]+)\)`)
+	timeFilter64ByColumnMacroRegexp = regexp.MustCompile(`\$timeFilter64ByColumn\(([\w_]+)\)`)
+)
 
-var fromMsMacroRegexp = regexp.MustCompile(`\$__from\b`)
-var toMsMacroRegexp = regexp.MustCompile(`\$__to\b`)
-var intervalMsMacroRegexp = regexp.MustCompile(`\$__interval_ms\b`)
+var (
+	fromMsMacroRegexp     = regexp.MustCompile(`\$__from\b`)
+	toMsMacroRegexp       = regexp.MustCompile(`\$__to\b`)
+	intervalMsMacroRegexp = regexp.MustCompile(`\$__interval_ms\b`)
+)
 
 type EvalQuery struct {
 	RefId          string `json:"refId"`
@@ -132,10 +137,10 @@ func (q *EvalQuery) replace(query string) (string, error) {
 		timeFilterMs = q.getDateFilter() + " AND " + timeFilterMs
 	}
 
-	// TODO: table 要用 `` 包裹起来
 	table := q.escapeIdentifier(q.Table)
 	if q.Database != "" {
-		table = q.escapeIdentifier(q.Database) + "." + table
+		// table 要用 `` 包裹起来
+		table = q.escapeIdentifier(q.Database) + ".`" + table + "`"
 	}
 
 	myRound, err := q.convertInterval(q.Round, q.IntervalFactor, false)
@@ -222,9 +227,9 @@ func (q *EvalQuery) replaceTimeFilters(query string, round int) string {
 }
 
 func (q *EvalQuery) getFilterSqlForDateTime(columnName string, dateTimeType string) string {
-	var convertFn = q.getConvertFn(dateTimeType)
-	var from = "$from"
-	var to = "$to"
+	convertFn := q.getConvertFn(dateTimeType)
+	from := "$from"
+	to := "$to"
 	if dateTimeType == "DATETIME64" {
 		from = "$__from/1000"
 		to = "$__to/1000"
@@ -270,12 +275,12 @@ func (q *EvalQuery) contain(ast *EvalAST, field string) bool {
 }
 
 func (q *EvalQuery) _parseMacro(macro string, query string) ([]string, error) {
-	var mLen = len(macro)
-	var mPos = strings.Index(query, macro)
+	mLen := len(macro)
+	mPos := strings.Index(query, macro)
 	if mPos == -1 || query[mPos:mPos+mLen+1] != macro+"(" {
 		return []string{query, ""}, nil
 	}
-	var fromIndex, err = q._fromIndex(query, macro)
+	fromIndex, err := q._fromIndex(query, macro)
 	if err != nil {
 		return nil, err
 	}
@@ -302,12 +307,12 @@ func (q *EvalQuery) _columns(key, value, beforeMacrosQuery, fromQuery string) (s
 	if key[len(key)-1] == ')' || value[len(value)-1] == ')' {
 		return "", fmt.Errorf("some of passed arguments are without aliases: %s, %s", key, value)
 	}
-	var keySplit = strings.Split(strings.Trim(key, " \xA0\t\r\n"), " ")
-	var keyAlias = keySplit[len(keySplit)-1]
-	var valueSplit = strings.Split(strings.Trim(value, " \xA0\t\r\n"), " ")
-	var valueAlias = valueSplit[len(valueSplit)-1]
-	var havingIndex = strings.Index(strings.ToLower(fromQuery), "having")
-	var having = ""
+	keySplit := strings.Split(strings.Trim(key, " \xA0\t\r\n"), " ")
+	keyAlias := keySplit[len(keySplit)-1]
+	valueSplit := strings.Split(strings.Trim(value, " \xA0\t\r\n"), " ")
+	valueAlias := valueSplit[len(valueSplit)-1]
+	havingIndex := strings.Index(strings.ToLower(fromQuery), "having")
+	having := ""
 
 	if havingIndex != -1 {
 		having = " " + fromQuery[havingIndex:]
@@ -340,7 +345,7 @@ func (q *EvalQuery) rateColumns(query string, ast *EvalAST) (string, error) {
 	if len(fromQuery) < 1 {
 		return query, nil
 	}
-	var args = ast.Obj["$rateColumns"].(*EvalAST).Arr
+	args := ast.Obj["$rateColumns"].(*EvalAST).Arr
 	if args == nil || len(args) != 2 {
 		return "", fmt.Errorf("amount of arguments must equal 2 for $rateColumns func. Parsed arguments are: %v", args)
 	}
@@ -357,13 +362,13 @@ func (q *EvalQuery) rateColumns(query string, ast *EvalAST) (string, error) {
 }
 
 func (q *EvalQuery) _fromIndex(query, macro string) (int, error) {
-	var fromRe = regexp.MustCompile("(?im)\\" + macro + "\\([\\w\\s\\S]+?\\)(\\s+FROM\\s+)")
-	var matches = fromRe.FindStringSubmatchIndex(query)
+	fromRe := regexp.MustCompile("(?im)\\" + macro + "\\([\\w\\s\\S]+?\\)(\\s+FROM\\s+)")
+	matches := fromRe.FindStringSubmatchIndex(query)
 	if matches == nil || len(matches) == 0 {
 		return 0, fmt.Errorf("could not find FROM-statement at: %s", query)
 	}
-	var fragmentWithFrom = query[matches[len(matches)-2]:matches[len(matches)-1]]
-	var fromRelativeIndex = strings.Index(strings.ToLower(fragmentWithFrom), "from")
+	fragmentWithFrom := query[matches[len(matches)-2]:matches[len(matches)-1]]
+	fromRelativeIndex := strings.Index(strings.ToLower(fragmentWithFrom), "from")
 	return matches[1] - len(fragmentWithFrom) + fromRelativeIndex, nil
 }
 
@@ -376,7 +381,7 @@ func (q *EvalQuery) rate(query string, ast *EvalAST) (string, error) {
 	if len(fromQuery) < 1 {
 		return query, nil
 	}
-	var args = ast.Obj["$rate"].(*EvalAST).Arr
+	args := ast.Obj["$rate"].(*EvalAST).Arr
 	if args == nil || len(args) < 1 {
 		return "", fmt.Errorf("Amount of arguments must be > 0 for $rate func. Parsed arguments are: %v ", args)
 	}
@@ -385,8 +390,8 @@ func (q *EvalQuery) rate(query string, ast *EvalAST) (string, error) {
 }
 
 func (q *EvalQuery) _rate(args []interface{}, beforeMacrosQuery, fromQuery string) (string, error) {
-	var aliases = make([]string, len(args))
-	var argsStr = make([]string, len(args))
+	aliases := make([]string, len(args))
+	argsStr := make([]string, len(args))
 	for i, arg := range args {
 		str := arg.(string)
 		if str[len(str)-1] == ')' {
@@ -424,17 +429,17 @@ func (q *EvalQuery) perSecondColumns(query string, ast *EvalAST) (string, error)
 	if len(fromQuery) < 1 {
 		return query, nil
 	}
-	var args = ast.Obj["$perSecondColumns"].(*EvalAST).Arr
+	args := ast.Obj["$perSecondColumns"].(*EvalAST).Arr
 	if len(args) != 2 {
 		return "", fmt.Errorf("amount of arguments must equal 2 for $perSecondColumns func. Parsed arguments are: %v", args)
 	}
 
-	var key = args[0].(string)
-	var value = "max(" + strings.Trim(args[1].(string), " \xA0\t\r\n") + ") AS max_0"
-	var havingIndex = strings.Index(strings.ToLower(fromQuery), "having")
-	var having = ""
-	var aliasIndex = strings.Index(strings.ToLower(key), " as ")
-	var alias = "perSecondColumns"
+	key := args[0].(string)
+	value := "max(" + strings.Trim(args[1].(string), " \xA0\t\r\n") + ") AS max_0"
+	havingIndex := strings.Index(strings.ToLower(fromQuery), "having")
+	having := ""
+	aliasIndex := strings.Index(strings.ToLower(key), " as ")
+	alias := "perSecondColumns"
 	if aliasIndex == -1 {
 		key = key + " AS " + alias
 	} else {
@@ -477,7 +482,7 @@ func (q *EvalQuery) perSecond(query string, ast *EvalAST) (string, error) {
 	if len(fromQuery) < 1 {
 		return query, nil
 	}
-	var args = ast.Obj["$perSecond"].(*EvalAST).Arr
+	args := ast.Obj["$perSecond"].(*EvalAST).Arr
 	if len(args) < 1 {
 		return "", fmt.Errorf("amount of arguments must be > 0 for $perSecond func. Parsed arguments are: %v", args)
 	}
@@ -489,8 +494,8 @@ func (q *EvalQuery) perSecond(query string, ast *EvalAST) (string, error) {
 }
 
 func (q *EvalQuery) _perSecond(args []interface{}, beforeMacrosQuery, fromQuery string) (string, error) {
-	var cols = make([]string, len(args))
-	var argsStr = make([]string, len(args))
+	cols := make([]string, len(args))
+	argsStr := make([]string, len(args))
 	for i, item := range args {
 		argsStr[i] = item.(string)
 		cols[i] = fmt.Sprintf("if(runningDifference(max_%d) < 0, nan, runningDifference(max_%d) / runningDifference(t/1000)) AS max_%d_Rate", i, i, i)
@@ -530,7 +535,7 @@ func (q *EvalQuery) getNaturalTimeSeries(dateTimeType string, from, to int64) st
 	const FewMonths = 60 * 60 * 24 * 30 * 10
 	const FewYears = 60 * 60 * 24 * 365 * 6
 	if dateTimeType == "DATETIME" || dateTimeType == "DATETIME64" {
-		var duration = to - from
+		duration := to - from
 		if duration < SomeMinutes {
 			return "toUInt32($dateTimeCol) * 1000"
 		} else if duration < FewHours {
@@ -639,7 +644,7 @@ func (q *EvalQuery) unescape(query string) (string, error) {
 		}
 		arg := r.result
 		arg = strings.Replace(arg, "'", "", -1)
-		var closeMacros = openMacros + len(macros) + len(r.result) + 1
+		closeMacros := openMacros + len(macros) + len(r.result) + 1
 		query = query[:openMacros] + arg + query[closeMacros:]
 		openMacros = strings.Index(query, macros)
 	}
@@ -689,8 +694,8 @@ func newEvalAST(isObj bool) *EvalAST {
 		Obj: obj,
 		Arr: arr,
 	}
-
 }
+
 func (e *EvalAST) hasOwnProperty(key string) bool {
 	v, hasKey := e.Obj[key]
 	return hasKey && v != nil
@@ -806,7 +811,7 @@ func (s *EvalQueryScanner) SetRoot(token string) {
 }
 
 func (s *EvalQueryScanner) isExpectedNext() bool {
-	var v = s.expectedNext
+	v := s.expectedNext
 	s.expectedNext = false
 	return v
 }
@@ -868,7 +873,7 @@ func (s *EvalQueryScanner) toAST() (*EvalAST, error) {
 			}
 			s._s = s._s[len(subQuery)+1:]
 		} else if isMacroFunc(s.Token) {
-			var funcName = s.Token
+			funcName := s.Token
 			if next, err := s.Next(); err != nil {
 				return nil, fmt.Errorf("wrong macros parsing: %v", err)
 			} else if !next {
@@ -904,7 +909,7 @@ func (s *EvalQueryScanner) toAST() (*EvalAST, error) {
 					return nil, err
 				}
 				if subAST.hasOwnProperty("root") && len(subAST.Obj["root"].(*EvalAST).Arr) > 0 {
-					var subArr = subAST.Obj["root"].(*EvalAST)
+					subArr := subAST.Obj["root"].(*EvalAST)
 					argument += " ("
 					for _, item := range subArr.Arr {
 						argument += item.(string)
@@ -934,11 +939,11 @@ func (s *EvalQueryScanner) toAST() (*EvalAST, error) {
 				return nil, fmt.Errorf("parseJOIN error: %v", err)
 			}
 		} else if s.RootToken == "union all" {
-			var statement = "union all"
+			statement := "union all"
 			s._s = s.Token + " " + s._s
-			var subQueryPos = strings.Index(strings.ToLower(s._s), statement)
+			subQueryPos := strings.Index(strings.ToLower(s._s), statement)
 			for subQueryPos != -1 {
-				var subQuery = s._s[0:subQueryPos]
+				subQuery := s._s[0:subQueryPos]
 				var ast *EvalAST
 				if ast, err = toAST(subQuery); err != nil {
 					return nil, err
@@ -954,7 +959,7 @@ func (s *EvalQueryScanner) toAST() (*EvalAST, error) {
 			s._s = ""
 			s.Tree.pushObj(statement, ast)
 		} else if isComment(s.Token) {
-			//comment is part of push element, and will be add after next statement
+			// comment is part of push element, and will be add after next statement
 			argument += s.Token + "\n"
 		} else if isClosureChars(s.Token) || s.Token == "." {
 			argument += s.Token
@@ -975,7 +980,7 @@ func (s *EvalQueryScanner) parseJOIN(argument string) (string, error) {
 	if !s.Tree.hasOwnProperty("join") {
 		s.Tree.Obj["join"] = newEvalAST(false)
 	}
-	var joinType = s.Token
+	joinType := s.Token
 	if next, err := s.Next(); err != nil {
 		return "", err
 	} else if !next {
@@ -984,15 +989,15 @@ func (s *EvalQueryScanner) parseJOIN(argument string) (string, error) {
 	var source *EvalAST
 	var err error
 	if isClosureChars(s.Token) {
-		var subQuery = betweenBraces(s._s)
+		subQuery := betweenBraces(s._s)
 		if source, err = toAST(subQuery); err != nil {
 			return "", err
 		}
 		s._s = s._s[len(subQuery)+1:]
 		s.Token = ""
 	} else {
-		var sourceStr = ""
-		var ok = true
+		sourceStr := ""
+		ok := true
 		for {
 			if isID(s.Token) && !isTable(sourceStr) && strings.ToUpper(s.Token) != "AS" && !onJoinTokenOnlyRe.MatchString(s.Token) {
 				sourceStr += s.Token
@@ -1019,7 +1024,7 @@ func (s *EvalQueryScanner) parseJOIN(argument string) (string, error) {
 		}
 	}
 
-	var joinAST = &EvalAST{
+	joinAST := &EvalAST{
 		Obj: map[string]interface{}{
 			"type":    joinType,
 			"source":  source,
@@ -1042,8 +1047,8 @@ func (s *EvalQueryScanner) parseJOIN(argument string) (string, error) {
 			break
 		}
 	}
-	var joinExprToken = strings.ToLower(s.Token)
-	var joinConditions = ""
+	joinExprToken := strings.ToLower(s.Token)
+	joinConditions := ""
 	for {
 		if next, err := s.Next(); err != nil {
 			return "", fmt.Errorf("joinConditions s.Next() return %v", err)
@@ -1114,15 +1119,17 @@ func (s *EvalQueryScanner) RemoveComments(query string) (string, error) {
 	return regexp2.MustCompile(commentRe, 0).Replace(query, "", 0, -1)
 }
 
-const wsRe = "\\s+"
-const commentRe = `--(([^\'\n]*[\']){2})*[^\'\n]*(?=\n|$)|` + `/\*(?:[^*]|\*[^/])*\*/`
-const idRe = "[a-zA-Z_][a-zA-Z_0-9]*"
-const intRe = "\\d+"
-const powerIntRe = "\\d+e\\d+"
-const floatRe = "\\d+\\.\\d*|\\d*\\.\\d+|\\d+[eE][-+]\\d+"
-const stringRe = "('(?:[^'\\\\]|\\\\.)*')|(`(?:[^`\\\\]|\\\\.)*`)|(\"(?:[^\"\\\\]|\\\\.)*\")"
-const binaryOpRe = "=>|\\|\\||>=|<=|==|!=|<>|->|[-+/%*=<>\\.!]"
-const statementRe = "\\b(with|select|from|where|having|order by|group by|limit|format|prewhere|union all)\\b"
+const (
+	wsRe        = "\\s+"
+	commentRe   = `--(([^\'\n]*[\']){2})*[^\'\n]*(?=\n|$)|` + `/\*(?:[^*]|\*[^/])*\*/`
+	idRe        = "[a-zA-Z_][a-zA-Z_0-9]*"
+	intRe       = "\\d+"
+	powerIntRe  = "\\d+e\\d+"
+	floatRe     = "\\d+\\.\\d*|\\d*\\.\\d+|\\d+[eE][-+]\\d+"
+	stringRe    = "('(?:[^'\\\\]|\\\\.)*')|(`(?:[^`\\\\]|\\\\.)*`)|(\"(?:[^\"\\\\]|\\\\.)*\")"
+	binaryOpRe  = "=>|\\|\\||>=|<=|==|!=|<>|->|[-+/%*=<>\\.!]"
+	statementRe = "\\b(with|select|from|where|having|order by|group by|limit|format|prewhere|union all)\\b"
+)
 
 // look https://clickhouse.tech/docs/en/sql-reference/statements/select/join/
 // [GLOBAL] [ANY|ALL] [INNER|LEFT|RIGHT|FULL|CROSS] [OUTER] JOIN
@@ -1202,15 +1209,18 @@ const joinsRe = "\\b(" +
 	"outer\\s+join|" +
 	"join" +
 	")\\b"
-const onJoinTokenRe = "\\b(using|on)\\b"
-const tableNameRe = `([A-Za-z0-9_]+|[A-Za-z0-9_]+\\.[A-Za-z0-9_]+)`
-const macroFuncRe = "(\\$rateColumns|\\$perSecondColumns|\\$rate|\\$perSecond|\\$columns)"
-const condRe = "\\b(or|and)\\b"
-const inRe = "\\b(global in|global not in|not in|in)\\b"
-const closureRe = "[\\(\\)\\[\\]]"
-const specCharsRe = "[,?:]"
-const macroRe = "\\$[A-Za-z0-9_$]+"
-const skipSpaceRe = "[\\(\\.! \\[]"
+
+const (
+	onJoinTokenRe = "\\b(using|on)\\b"
+	tableNameRe   = `([A-Za-z0-9_]+|[A-Za-z0-9_]+\\.[A-Za-z0-9_]+)`
+	macroFuncRe   = "(\\$rateColumns|\\$perSecondColumns|\\$rate|\\$perSecond|\\$columns)"
+	condRe        = "\\b(or|and)\\b"
+	inRe          = "\\b(global in|global not in|not in|in)\\b"
+	closureRe     = "[\\(\\)\\[\\]]"
+	specCharsRe   = "[,?:]"
+	macroRe       = "\\$[A-Za-z0-9_$]+"
+	skipSpaceRe   = "[\\(\\.! \\[]"
+)
 
 const tableFuncRe = "\\b(sqlite|file|remote|remoteSecure|cluster|clusterAllReplicas|merge|numbers|url|mysql|postgresql|jdbc|odbc|hdfs|input|generateRandom|s3|s3Cluster)\\b"
 
@@ -1256,23 +1266,28 @@ const tableFuncRe = "\\b(sqlite|file|remote|remoteSecure|cluster|clusterAllRepli
    "uint8|uint16|uint32|uint64|int8|int16|int32|int64|float32|float64|datetime|enum8|enum16|" +
    "array|tuple|string)\\b" */
 
-var wsOnlyRe = regexp.MustCompile("^(?:" + wsRe + ")$")
-var commentOnlyRe = regexp2.MustCompile("^(?:"+commentRe+")$", regexp2.Multiline)
-var idOnlyRe = regexp.MustCompile("^(?:" + idRe + ")$")
-var closureOnlyRe = regexp.MustCompile("^(?:" + closureRe + ")$")
-var macroFuncOnlyRe = regexp.MustCompile("^(?:" + macroFuncRe + ")$")
-var statementOnlyRe = regexp.MustCompile("(?mi)^(?:" + statementRe + ")$")
-var joinsOnlyRe = regexp.MustCompile("(?mi)^(?:" + joinsRe + ")$")
-var onJoinTokenOnlyRe = regexp.MustCompile("(?mi)^(?:" + onJoinTokenRe + ")$")
-var tableNameOnlyRe = regexp.MustCompile("(?mi)^(?:" + tableNameRe + ")$")
+var (
+	wsOnlyRe          = regexp.MustCompile("^(?:" + wsRe + ")$")
+	commentOnlyRe     = regexp2.MustCompile("^(?:"+commentRe+")$", regexp2.Multiline)
+	idOnlyRe          = regexp.MustCompile("^(?:" + idRe + ")$")
+	closureOnlyRe     = regexp.MustCompile("^(?:" + closureRe + ")$")
+	macroFuncOnlyRe   = regexp.MustCompile("^(?:" + macroFuncRe + ")$")
+	statementOnlyRe   = regexp.MustCompile("(?mi)^(?:" + statementRe + ")$")
+	joinsOnlyRe       = regexp.MustCompile("(?mi)^(?:" + joinsRe + ")$")
+	onJoinTokenOnlyRe = regexp.MustCompile("(?mi)^(?:" + onJoinTokenRe + ")$")
+	tableNameOnlyRe   = regexp.MustCompile("(?mi)^(?:" + tableNameRe + ")$")
+)
 
 /* var operatorOnlyRe = regexp.MustCompile("^(?mi)(?:" + operatorRe + ")$") */
 /* var dataTypeOnlyRe = regexp.MustCompile("^(?:" + dataTypeRe + ")$") */
 /* var builtInFuncOnlyRe = regexp.MustCompile("^(?:" + builtInFuncRe + ")$") */
 var tableFuncOnlyRe = regexp.MustCompile("(?mi)^(?:" + tableFuncRe + ")$")
-var macroOnlyRe = regexp.MustCompile("(?mi)^(?:" + macroRe + ")$")
-var inOnlyRe = regexp.MustCompile("(?mi)^(?:" + inRe + ")$")
-var condOnlyRe = regexp.MustCompile("(?mi)^(?:" + condRe + ")$")
+
+var (
+	macroOnlyRe = regexp.MustCompile("(?mi)^(?:" + macroRe + ")$")
+	inOnlyRe    = regexp.MustCompile("(?mi)^(?:" + inRe + ")$")
+	condOnlyRe  = regexp.MustCompile("(?mi)^(?:" + condRe + ")$")
+)
 
 /* var numOnlyRe = regexp.MustCompile("^(?:" + strings.Join([]string{powerIntRe, intRe, floatRe},"|") + ")$") */
 /* var stringOnlyRe = regexp.MustCompile("^(?:" + stringRe + ")$") */
@@ -1368,11 +1383,13 @@ func isBinary(token string) bool {
 }
 */
 
-const tabSize = "    " // 4 spaces
-const newLine = "\n"
+const (
+	tabSize = "    " // 4 spaces
+	newLine = "\n"
+)
 
 func printItems(items *EvalAST, tab string, separator string) string {
-	var result = ""
+	result := ""
 	if len(items.Arr) > 0 {
 		if len(items.Arr) == 1 {
 			result += " " + items.Arr[0].(string) + newLine
@@ -1394,7 +1411,7 @@ func printItems(items *EvalAST, tab string, separator string) string {
 }
 
 func toAST(s string) (*EvalAST, error) {
-	var scanner = newScanner(s)
+	scanner := newScanner(s)
 	return scanner.toAST()
 }
 
@@ -1416,8 +1433,8 @@ func isClosured(argument string) bool {
 }
 
 func betweenBraces(query string) string {
-	var openBraces = 1
-	var subQuery = ""
+	openBraces := 1
+	subQuery := ""
 	for i := 0; i < len(query); i++ {
 		if query[i] == '(' {
 			openBraces++
@@ -1435,7 +1452,7 @@ func betweenBraces(query string) string {
 
 // see https://clickhouse.tech/docs/en/sql-reference/statements/select/
 func printAST(AST *EvalAST, tab string) string {
-	var result = ""
+	result := ""
 	if AST.hasOwnProperty("root") {
 		result += printItems(AST.Obj["root"].(*EvalAST), "\n", "\n")
 	}

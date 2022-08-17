@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 type macrosTestCase struct {
@@ -1169,7 +1170,6 @@ func TestEvalQueryTimeFilterByColumnAndRange(t *testing.T) {
 		q.replaceTimeFilters(query, 0),
 		description+" unexpected results DATETIME64",
 	)
-
 }
 
 func TestEvalQueryTimeFilter64ByColumnAndRangeMs(t *testing.T) {
@@ -1254,14 +1254,11 @@ func TestUnescapeMacros(t *testing.T) {
 	unescapedQuery, err := q.unescape(query)
 	r.NoError(err)
 	r.Equal(expQuery, unescapedQuery)
-
 }
 
 func TestEscapeIdentifier(t *testing.T) {
 	q := EvalQuery{}
 	r := require.New(t)
-	r.Equal("live.live.push-live_all", q.escapeIdentifier("live.live.push-live_all"), "dash in table name")
-
 	r.Equal("My_Identifier_33", q.escapeIdentifier("My_Identifier_33"), "Standard identifier - untouched")
 	r.Equal("\"1nfoVista\"", q.escapeIdentifier("1nfoVista"), "Begining with number")
 	r.Equal("\"My Identifier\"", q.escapeIdentifier("My Identifier"), "Containing spaces")
@@ -1272,7 +1269,6 @@ func TestEscapeIdentifier(t *testing.T) {
 	r.Equal("\"My\\\"Bad\\\"Identifier\"", q.escapeIdentifier("My\"Bad\"Identifier"), "Containing double-quote")
 
 	r.Equal("toDateTime(someDate)", q.escapeIdentifier("toDateTime(someDate)"), "Containing function calls")
-
 }
 
 /* check https://github.com/Altinity/clickhouse-grafana/issues/284 */
@@ -1376,7 +1372,6 @@ func TestEvalQueryNaturalTimeSeries(t *testing.T) {
 	actualQuery, err := q.replace(query)
 	r.NoError(err)
 	r.Equal(expQuery, actualQuery, description)
-
 }
 
 /* check $timeSeriesMs $timeFilterMs https://github.com/Altinity/clickhouse-grafana/issues/344, https://github.com/Altinity/clickhouse-grafana/issues/398 */
