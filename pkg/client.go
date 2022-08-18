@@ -26,6 +26,7 @@ type ClickHouseClient struct {
 
 func (client *ClickHouseClient) Query(ctx context.Context, query string) (*Response, error) {
 	backend.Logger.Info("fuck: ClickHouseClient Query: %s", query)
+	fmt.Printf("fuck: print ClickHouseClient Query: %s\n", query)
 
 	onErr := func(err error) (*Response, error) {
 		backend.Logger.Error(fmt.Sprintf("clickhouse client query error: %v", err))

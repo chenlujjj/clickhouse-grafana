@@ -142,11 +142,15 @@ func (ds *ClickHouseDatasource) QueryData(
 	return response, nil
 }
 
+var _ backend.CheckHealthHandler = (*ClickHouseDatasource)(nil)
+
+// 该方法实现了 backend.CheckHealthHandler 接口
 func (ds *ClickHouseDatasource) CheckHealth(
 	ctx context.Context,
 	req *backend.CheckHealthRequest,
 ) (*backend.CheckHealthResult, error) {
 	backend.Logger.Info("fuck: ClickHouseDatasource CheckHealth")
+	fmt.Println("fuck: print ClickHouseDatasource CheckHealth")
 
 	onErr := func(err error) (*backend.CheckHealthResult, error) {
 		backend.Logger.Error(fmt.Sprintf("HealthCheck error: %v", err))
