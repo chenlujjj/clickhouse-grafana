@@ -89,10 +89,15 @@ func (ds *ClickHouseDatasource) evalQuery(pluginContext backend.PluginContext, c
 	return ds.executeQuery(pluginContext, ctx, &q)
 }
 
+var _ backend.QueryDataHandler = (*ClickHouseDatasource)(nil)
+
+// 该方法实现了 backend.QueryDataHandler 接口
 func (ds *ClickHouseDatasource) QueryData(
 	ctx context.Context,
 	req *backend.QueryDataRequest,
 ) (*backend.QueryDataResponse, error) {
+	backend.Logger.Info("fuck: enter QueryData")
+	fmt.Println("fuck: print enter QueryData")
 	onErr := func(err error) (*backend.QueryDataResponse, error) {
 		backend.Logger.Error(fmt.Sprintf("QueryData error: %v", err))
 		return nil, err
