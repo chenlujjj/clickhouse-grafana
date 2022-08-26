@@ -150,10 +150,10 @@ func TestMacrosBuilder(t *testing.T) {
 }
 
 /*
- comments and $rate and from in field name
- check https://github.com/Altinity/clickhouse-grafana/issues/187
- check https://github.com/Altinity/clickhouse-grafana/issues/256
- check https://github.com/Altinity/clickhouse-grafana/issues/265
+comments and $rate and from in field name
+check https://github.com/Altinity/clickhouse-grafana/issues/187
+check https://github.com/Altinity/clickhouse-grafana/issues/256
+check https://github.com/Altinity/clickhouse-grafana/issues/265
 */
 func TestCommentsAndRateMacrosWithFromKeywordInFieldName(t *testing.T) {
 	const query = "/*comment1*/\n-- comment2\n/*\ncomment3\n */\n$rate(countIf(service_name='mysql' AND from_user='alice') AS mysql_alice, countIf(service_name='postgres') AS postgres)\n" +
@@ -171,8 +171,8 @@ func TestCommentsAndRateMacrosWithFromKeywordInFieldName(t *testing.T) {
 }
 
 /*
- columns + union all + with
- fix https://github.com/Altinity/clickhouse-grafana/issues/319
+columns + union all + with
+fix https://github.com/Altinity/clickhouse-grafana/issues/319
 */
 func TestColumnsMacrosWithUnionAllAndWithKeyword(t *testing.T) {
 	const query = "$columns(\n" +
@@ -1210,7 +1210,7 @@ func TestEvalQueryTimeSeriesTimeFilterAndDateTime64(t *testing.T) {
 		"GROUP BY t\n" +
 		"ORDER BY t"
 	const expQuery = "SELECT (intDiv(toFloat64(\"d\") * 1000, (15 * 1000)) * (15 * 1000)) as t, sum(x) AS metric\n" +
-		"FROM default.`test_datetime64`\n" +
+		"FROM default.test_datetime64\n" +
 		"WHERE \"d\" >= toDateTime64(1545613320, 3) AND \"d\" <= toDateTime64(1546300740, 3)\n" +
 		"GROUP BY t\n" +
 		"ORDER BY t"
@@ -1276,6 +1276,20 @@ func TestEscapeIdentifier(t *testing.T) {
 	r.Equal("toDateTime(someDate)", q.escapeIdentifier("toDateTime(someDate)"), "Containing function calls")
 }
 
+func TestEscapeTableIdentifier(t *testing.T) {
+	q := EvalQuery{}
+	r := require.New(t)
+	r.Equal("My_Identifier_33", q.escapeTableIdentifier("My_Identifier_33"), "Standard identifier - untouched")
+	r.Equal("`\"1nfoVista\"`", q.escapeTableIdentifier("\"1nfoVista\""), "Begining with number and quotes")
+	r.Equal("`My Identifier`", q.escapeTableIdentifier("My Identifier"), "Containing spaces")
+	r.Equal("`My\\`Identifier`", q.escapeTableIdentifier("My`Identifier"), "Containing single quote")
+
+	for _, query := range []string{"a / 1000", "a + b", "b - c", "5*c", "a / 1000 + b - 5*c"} {
+		r.Equal("`"+query+"`", q.escapeTableIdentifier(query), "Containing arithmetic operation special characters")
+	}
+	r.Equal("`My\"Bad\"Identifier`", q.escapeTableIdentifier("My\"Bad\"Identifier"), "Containing double-quote")
+}
+
 /* check https://github.com/Altinity/clickhouse-grafana/issues/284 */
 func TestEvalQueryColumnsMacrosAndArrayJoin(t *testing.T) {
 	const description = "check replace with $columns and concat and ARRAY JOIN"
@@ -1285,7 +1299,7 @@ func TestEvalQueryColumnsMacrosAndArrayJoin(t *testing.T) {
 		"FROM $table\n" +
 		"ARRAY JOIN Metrics"
 	// new lines was removed, because we don't use adhoc filters
-	const expQuery = "SELECT t, groupArray((JobSource, Kafka_lag_max)) AS groupArr FROM ( SELECT (intDiv(toUInt32(dateTimeColumn), 15) * 15) * 1000 AS t, substring(concat(JobName as JobName, ' # ', Metrics.Name as MetricName), 1, 50) as JobSource, sum(Metrics.Value) as Kafka_lag_max FROM default.`test_array_join_nested`\n" +
+	const expQuery = "SELECT t, groupArray((JobSource, Kafka_lag_max)) AS groupArr FROM ( SELECT (intDiv(toUInt32(dateTimeColumn), 15) * 15) * 1000 AS t, substring(concat(JobName as JobName, ' # ', Metrics.Name as MetricName), 1, 50) as JobSource, sum(Metrics.Value) as Kafka_lag_max FROM default.test_array_join_nested\n" +
 		"ARRAY JOIN Metrics " +
 		"WHERE dateTimeColumn >= toDate(1545613320) AND dateTimeColumn <= toDate(1546300740) AND dateTimeColumn >= toDateTime(1545613320) AND dateTimeColumn <= toDateTime(1546300740) GROUP BY t, JobSource ORDER BY t, JobSource) GROUP BY t ORDER BY t"
 	r := require.New(t)
@@ -1316,7 +1330,7 @@ func TestEvalQueryColumnsMacrosAndArrayJoin(t *testing.T) {
 func TestEvalQueryTimeFilterByColumnAndDateTimeCol(t *testing.T) {
 	const description = "combine $timeFilterByColumn and $dateTimeCol"
 	const query = "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter AND $timeFilterByColumn($dateTimeCol) AND $timeFilterByColumn(another_column) GROUP BY t"
-	const expQuery = "SELECT (intDiv(toUInt32(tm), 15) * 15) * 1000 as t, count() FROM default.`test_table` " +
+	const expQuery = "SELECT (intDiv(toUInt32(tm), 15) * 15) * 1000 as t, count() FROM default.test_table " +
 		"WHERE dt >= toDate(1545613320) AND dt <= toDate(1546300740) AND tm >= toDateTime(1545613320) AND tm <= toDateTime(1546300740) " +
 		"AND tm >= toDateTime(1545613201) AND tm <= toDateTime(1546300859) " +
 		"AND another_column >= toDateTime(1545613201) AND another_column <= toDateTime(1546300859) " +
@@ -1351,7 +1365,7 @@ func TestEvalQueryNaturalTimeSeries(t *testing.T) {
 	const description = "check $naturalTimeSeries"
 	const query = "SELECT $naturalTimeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t"
 	const expQuery = "SELECT toUInt32(toDateTime(toStartOfMonth(tm))) * 1000 as t, count() " +
-		"FROM default.`test_table` WHERE dt >= toDate(1545613320) AND dt <= toDate(1640995140) " +
+		"FROM default.test_table WHERE dt >= toDate(1545613320) AND dt <= toDate(1640995140) " +
 		"AND tm >= toDateTime(1545613320) AND tm <= toDateTime(1640995140) GROUP BY t"
 
 	r := require.New(t)
@@ -1388,7 +1402,7 @@ func TestEvalQueryTimeSeriesMsTimeFilterMsAndDateTime64(t *testing.T) {
 		"GROUP BY t\n" +
 		"ORDER BY t"
 	const expQuery = "SELECT (intDiv(toFloat64(\"d\") * 1000, 100) * 100) as t, sum(x) AS metric\n" +
-		"FROM default.`test_datetime64`\n" +
+		"FROM default.test_datetime64\n" +
 		"WHERE \"d\" >= toDateTime64(1545613323200/1000, 3) AND \"d\" <= toDateTime64(1546300799200/1000, 3)\n" +
 		"GROUP BY t\n" +
 		"ORDER BY t"
