@@ -2,7 +2,7 @@ version: "3"
 
 services:
   clickhouse-ontime:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:${CLICKHOUSE_VERSION:-latest}
     volumes:
       - ./docker/clickhouse/load_ontime.sh:/docker-entrypoint-initdb.d/load_ontime.sh
       - /var/lib/clickhouse/
@@ -27,6 +27,11 @@ services:
       - ./docker/clickhouse/client-key.pem:/etc/clickhouse-server/client-key.pem
       - ./docker/clickhouse/dhparam.pem:/etc/clickhouse-server/dhparam.pem
       - ./docker/clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
+
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=grafana
 
   postgres:
     image: postgres:latest
@@ -77,9 +82,8 @@ services:
     environment:
       GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel,grafana-clickhouse-datasource,vertamedia-clickhouse-datasource
       GF_LOG_LEVEL: debug
-      # @todo wait grafana 9.0 implementation alerts provisioning https://github.com/grafana/grafana/issues/40983#issuecomment-1137770772
-      GF_UNIFIED_ALERTING_ENABLED: ${GF_UNIFIED_ALERTING_ENABLED:-false}
-      GF_ALERTING_ENABLED: ${GF_ALERTING_ENABLED:-true}
+      GF_UNIFIED_ALERTING_ENABLED: ${GF_UNIFIED_ALERTING_ENABLED:-true}
+      GF_ALERTING_ENABLED: ${GF_ALERTING_ENABLED:-false}
     ports:
       - "3001:3000"
     depends_on:
@@ -112,8 +116,9 @@ services:
     image: golang:1.19
     working_dir: /go/src/grafana-clickhouse
     environment:
-      GOCACHE: "/go-cache"
+      GOCACHE: "/go-cache"p
       RUN_TESTS: "${RUN_TESTS:-.+}"
+      CGO_ENABLED: "0"
     volumes:
       - ./:/go/src/grafana-clickhouse
       - ./.cache:/go/pkg/mod

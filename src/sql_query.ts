@@ -119,11 +119,9 @@ export default class SqlQuery {
             timeFilterMs = SqlQuery.getDateFilter() + ' AND ' + timeFilterMs;
         }
 
-        // 处理表名
-        // let table = SqlQuery.escapeIdentifier(this.target.table);
-        let table = this.target.table
+        let table = SqlQuery.escapeTableIdentifier(this.target.table);
         if (this.target.database) {
-            table = SqlQuery.escapeIdentifier(this.target.database) + '.`' + table + '`';
+            table = SqlQuery.escapeTableIdentifier(this.target.database) + '.' + table;
         }
 
         let myround = this.target.round === "$step" ? interval : SqlQuery.convertInterval(this.target.round, 1),
