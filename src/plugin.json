@@ -1,15 +1,15 @@
 {
-  "id": "vertamedia-clickhouse-datasource",
+  "id": "bilibili-vertamedia-clickhouse-datasource",
   "type": "datasource",
-  "name": "Altinity plugin for ClickHouse",
+  "name": "Bilibili Altinity plugin for ClickHouse",
   "metrics": true,
   "annotations": true,
   "backend": true,
   "alerting": true,
   "logs": true,
-  "executable": "altinity-clickhouse-plugin",
+  "executable": "bilibili-altinity-clickhouse-plugin",
   "info": {
-    "description": "Altinity Grafana datasource for ClickHouse",
+    "description": "Bilibili Altinity Grafana datasource for ClickHouse",
     "author": {
       "name": "Altinity",
       "url": "https://altinity.com/"
@@ -44,7 +44,7 @@
         "url": "https://github.com/Altinity/clickhouse-grafana"
       }
     ],
-    "version": "2.5.2",
+    "version": "2.5.2-bili",
     "updated": "2020-07-31"
   },
   "dependencies": {
