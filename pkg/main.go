@@ -9,7 +9,6 @@ import (
 
 func main() {
 	backend.Logger.Info("Starting ClickHouse datasource backend...")
-	backend.Logger.Info("fuck this shit...")
 	err := datasource.Serve(GetDatasourceServeOpts())
 	if err != nil {
 		backend.Logger.Error(err.Error())
